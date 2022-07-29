@@ -1,0 +1,51 @@
+/* Please define your custom styles here */
+@import url(https://fonts.bunny.net/css?family=ibm-plex-mono:400,700);
+
+* {
+    font-family: 'Open Sans', sans-serif;
+  }
+  
+  @font-face {
+      font-family: "optotype";
+      /*src: url("../fonts/OptotypeGX.ttf") format('truetype');*/
+      src: url("../fonts/OptotypeVF.ttf") format('truetype');
+      /* font-weight: normal;
+      font-style: normal; */
+  }
+  
+  strong {
+    background-color: lightgray;
+    padding: 10px 17px;
+    margin: 0 5px;
+  }
+
+  /* .jspsych-content-wrapper {
+    background-color: gray;
+  } */
+  
+  .btn {
+    padding: 10px 30px;
+    color: blue;
+    background-color: antiquewhite;
+    display: inline-block;
+  }
+  .btn:hover{
+    background-color: rgb(231, 185, 126);
+  }
+  
+  #demo {
+    border: 2px dotted blue;
+    height: 100px;
+    font-variation-settings: "wght" 800;
+  }
+  .optotype {
+    font-family: "optotype";
+    font-size: 10em;
+  }
+  .stimulus {
+    font-family: "optotype";
+    font-size: 24px;
+  }
+  .inline {
+      display: inline-block;
+  }
