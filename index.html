@@ -11,6 +11,7 @@
         <script src="jspsych/dist/plugin-html-button-response.js"></script>
         <script src="jspsych/dist/plugin-survey-multi-select.js"></script>
         <script src="jspsych/dist/plugin-sketchpad.js"></script>
+        <script src="js/data_practica.js"></script>
 
         <link rel="stylesheet" href="jspsych/dist/jspsych.css">
         <link rel="stylesheet" href="css/customStyles.css">
@@ -21,8 +22,8 @@
         const timeline = [];
 
         // VARIABLES
-        var bloques = [0, 1, 2, 3];
-        // var bloques = [2, 3];
+        // var bloques = [0, 1, 2, 3];
+        var bloques = [0];
         var bloqueActual;
         var direccionSerie;
         var tipoVariacion;
@@ -48,6 +49,7 @@
         var iniciosDescendentes;
         var iniciosAscendentes;
         var datosCompletos;
+        var nuevaPractica = false;
 
         const info = [ {
                 nombre: 'peso',
@@ -56,8 +58,10 @@
                 modelo: 108,
                 string: "'wdth' 700, 'slnt' 0",
                 incremento: 4,
-                iniciosDescendentes: [136, 132, 140, 144],
-                iniciosAscendentes: [84, 92, 84, 80],
+                // iniciosDescendentes: [136, 132, 140, 144],
+                // iniciosAscendentes: [84, 92, 84, 80],
+                iniciosDescendentes: [136],
+                iniciosAscendentes: [84],
                 extremos: [76, 148]
             },
             {
@@ -188,9 +192,6 @@
                 case 2:
                     respuestaIngresada = 'derecha';
             }
-
-            console.log(respuestaIngresada);
-
         }
 
         // Traduce respuestaIngresada a signo ('+','-','='); lo añade a cadenaRespuestas
@@ -382,15 +383,14 @@
                 'Por último contestarás una pregunta, dando clic en una de las tres opciones' +
                 '<br><br>' + 
                 '<img src="img/tut-3.png"></img><br>',
-                '<p style="font-size:40px">Estudiamos 3 variables visuales</p>',
+                '<p style="font-size:40px">Estudiamos 3 características gráficas</p>',
                 '<p style="font-size:24px">Peso</p>' +
                 '<p class="inline" style="font-size:200px; font-family:&quot;optotype&quot;; font-variation-settings: &quot;wght&quot; 50, &quot;wdth&quot; 700;">M</p><div class="inline" style="width:40px"></div><p class="inline" style="font-size:200px; font-family:&quot;optotype&quot;; font-variation-settings: &quot;wght&quot; 180, &quot;wdth&quot; 700;">M</p>',
                 '<p style="font-size:24px">Ancho</p>' +
                 '<p class="inline" style="font-size:200px; font-family:&quot;optotype&quot;; font-variation-settings: &quot;wght&quot; 110, &quot;wdth&quot; 300;">M</p><div class="inline" style="width:40px"></div><p class="inline" style="font-size:200px; font-family:&quot;optotype&quot;; font-variation-settings: &quot;wght&quot; 110, &quot;wdth&quot; 1000;">M</p>',
                 '<p style="font-size:24px">Inclinación</p>' +
                 '<p class="inline" style="font-size:200px; font-family:&quot;optotype&quot;; font-variation-settings: &quot;wght&quot; 80, &quot;wdth&quot; 700, &quot;slnt&quot; 6;">M</p><div class="inline" style="width:40px"></div><p class="inline" style="font-size:200px; font-family:&quot;optotype&quot;; font-variation-settings: &quot;wght&quot; 80, &quot;wdth&quot; 700, &quot;slnt&quot; 20;">M</p>',
-                'A continuación' +
-                '<p style="font-size:40px">Ronda de práctica</p>'
+                '<p style="font-size:24px">Hagamos una ronda de práctica, para familiarizarnos con la prueba</p>'
             ],
             button_label_next: "Siguiente",
             button_label_previous: "Anterior",
@@ -442,6 +442,62 @@
             },
         }
 
+        var estimulosPractica = {
+            type: jsPsychHtmlKeyboardResponse,
+            stimulus: '<div class="stimulus izquierda inline">M</div><div class="spacerAngle inline" style="width: 2em;"></div><div class="stimulus derecha inline">M</div>',
+            options: 'NO_KEYS',
+            trial_duration: 500,
+            on_load: function(){
+                claseEstimulo();
+
+                let modelo = document.querySelector('.modelo');
+                modelo.style.cssText = "font-variation-settings:'" + jsPsych.timelineVariable('css') + "'" + jsPsych.timelineVariable('modelo')  + ',' + jsPsych.timelineVariable('css2');
+
+                let comparacion = document.querySelector('.comparacion');
+                comparacion.style.cssText = "font-variation-settings:'" + jsPsych.timelineVariable('css') + "'" + jsPsych.timelineVariable('comparacion')  + ',' + jsPsych.timelineVariable('css2');
+
+                obtenerUbicaciones();
+            }
+        }
+
+        var respuestasPractica = {
+            type: jsPsychHtmlButtonResponse,
+            stimulus: function(){
+                return '<p>¿Cuál tenía mayor ' + jsPsych.timelineVariable('variable') + '?</p>';
+            },
+            choices: ['<','=','>'],
+            data: {
+                correct_response: function(){
+                    return ubicacionesEstimulos['comparacion'];
+                },
+                seccion: 'practica'
+            },
+            on_finish: function(data){
+                evaluarRespuesta();
+                var acc = false;
+                console.log(data.correct_response);
+                console.log(respuestaIngresada);
+                if (data.correct_response == respuestaIngresada) {
+                    acc = true;
+                }
+                data.acierto = acc;
+            }
+        }
+
+        var feedback = {
+            type: jsPsychHtmlKeyboardResponse,
+            stimulus: function() {
+                var feedback_text = '<span style="color:red;font-size:40px;">Error <br/><br/> º_º</span>';
+                var last_resp_acc = jsPsych.data.getLastTrialData().values()[0].acierto;
+                if (last_resp_acc == true) {
+                    feedback_text = '<span style="color:green;font-size:40px;">Correcto <br/><br/> n_n</span>';
+                }
+                return feedback_text;
+            },
+            options: 'NO_KEYS',
+            trial_duration: 2000
+        }
+
         var estimulos = {
             type: jsPsychHtmlKeyboardResponse,
             stimulus: '<div class="stimulus izquierda inline">M</div><div class="spacerAngle inline" style="width: 2em;"></div><div class="stimulus derecha inline">M</div>',
@@ -461,7 +517,6 @@
 
         var pantallaRespuestas = {
             type: jsPsychHtmlButtonResponse,
-            // stimulus: '<p>¿Cuál tenía mayor ' + info.at(bloqueActual)['modelo'] + '?</p>',
             stimulus: function(){
                 return '<p>¿Cuál tenía mayor ' + info.at(bloqueActual)['pregunta'] + '?</p>';
             },
@@ -479,6 +534,53 @@
                 data.serieNumero = contadorSeries;
             }
         }
+
+        var ensayosPractica = {
+            timeline: [cruzFijacion, estimulosPractica, respuestasPractica, feedback],
+            timeline_variables: dataPractica,
+            randomize_order: true
+        }
+
+        var mensajeRepetirPractica = {
+            type: jsPsychHtmlButtonResponse,
+            stimulus: '<p style="font-size:24px; line-height:1.35;">Tendremos que repetir la ronda de práctica, <br/> para que nos quede todo más claro</p><br><br>',
+            choices: ['Repetir práctica']
+        }
+
+        var repetirPractica = {
+            timeline: [mensajeRepetirPractica],
+            conditional_function: function() {
+                var ultimaRonda = jsPsych.data.get().filter({seccion: 'practica'}).last(dataPractica.length);
+                var respuestasCorrectas = ultimaRonda.filter({acierto: true}).count();
+                var proporcion = respuestasCorrectas/dataPractica.length;
+                if (proporcion < .75) {
+                    nuevaPractica = true;
+                    return true;
+                } else {
+                    nuevaPractica = false;
+                    return false;
+                }
+            }
+        }
+
+        var loopPractica = {
+            timeline: [ensayosPractica,repetirPractica],
+            loop_function: function(){
+                if (nuevaPractica == true) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        }
+        timeline.push(loopPractica);
+
+        var finPractica = {
+            type: jsPsychHtmlButtonResponse,
+            stimulus: '<p style="font-size:24px;  line-height:1.35;">¡Has terminado la práctica con éxito! <br/> Da clic para comenzar la prueba</p><br><br>',
+            choices: ['Comenzar']
+        }
+        timeline.push(finPractica);
         
         // REPITE ENSAYO HASTA QUE SE DEBA INICIAR OTRA SERIE
         var ensayo = {
@@ -600,10 +702,6 @@
                     console.log('YA SE ACABÓ LA TORTURA!!!');
                     
                     let datosCompletos = jsPsych.data.get().filter( {id: 'respuesta'} ).last()['trials'][0];
-                    // datosCompletos.promedioUmbral = jsPsych.data.get().select('umbralSerie').mean();
-                    // datosCompletos.promedioUmbral = jsPsych.data.get().select('umbralSerie').median();
-                    // datosCompletos.promedioUmbral = jsPsych.data.get().select('umbralSerie').sd();
-                    // datosCompletos.promedioUmbral = jsPsych.data.get().select('umbralSerie').variance();
 
                     let umbralAltoPromedio = jsPsych.data.get().filter( {id: 'respuesta', variable: tipoVariacion} ).select('umbralAlto').mean();
 
@@ -636,11 +734,10 @@
                 console.log("INICIA SERIE")
             }
         }
-        //timeline.push(serie);
 
         var inicioBloque = {
             type: jsPsychHtmlButtonResponse,
-            stimulus: '<span style="font-size:40px;">El siguiente bloque comenzará en:</span> <br/><br/>',
+            stimulus: '<span style="font-size:40px;">Da clic para comenzar el bloque</span> <br/><br/>',
             choices: ['Continuar >'],
             css_classes: ['bloque']
         }
@@ -681,7 +778,7 @@
             choices: 'NO_KEYS',
             on_start: function(data){
                 jsPsych.data.get().localSave('csv', 'data.csv');
-                console.log('PANTALLA DESPEDIDA');
+                // Además de los datos completos, podríamos filtrar y descargar solo los datos que nos importan, o los que nos servirán para graficar
             }
         }
         timeline.push(agradecimiento);
