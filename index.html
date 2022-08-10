@@ -22,6 +22,7 @@
 
         // VARIABLES
         var bloques = [0, 1, 2, 3];
+        // var bloques = [2, 3];
         var bloqueActual;
         var direccionSerie;
         var tipoVariacion;
@@ -37,7 +38,7 @@
         let signoRespuesta;
         var contadorEnsayos = 0;
         var contadorSeries = 0;
-        var erroresConsecutivos = 0;
+        //var erroresConsecutivos = 0;
         var ubicacionesEstimulos = {};
         var respuestaIngresada;
         var cadenaRespuestas = [];
@@ -52,21 +53,23 @@
                 nombre: 'peso',
                 pregunta: 'peso',
                 atributocss: 'wght',
-                modelo: 110,
+                modelo: 108,
                 string: "'wdth' 700, 'slnt' 0",
                 incremento: 4,
-                iniciosDescendentes: [126, 142, 158],
-                iniciosAscendentes: [94, 78, 62]
+                iniciosDescendentes: [136, 132, 140, 144],
+                iniciosAscendentes: [84, 92, 84, 80],
+                extremos: [76, 148]
             },
             {
                 nombre: 'ancho',
                 pregunta: 'ancho',
                 atributocss: 'wdth',
-                modelo: 800,
+                modelo: 780,
                 string: "'wght' 110, 'slnt' 0",
                 incremento: 15,
-                iniciosDescendentes: [860, 920, 980],
-                iniciosAscendentes: [520, 580, 640],
+                iniciosDescendentes: [825, 855, 885, 915],
+                iniciosAscendentes: [660, 675, 705, 705],
+                extremos: [645, 930],
             },
             {
                 nombre: 'oblicuacion',
@@ -75,8 +78,9 @@
                 modelo: 10,
                 string: "'wdth' 700, 'wght' 110",
                 incremento: 1,
-                iniciosDescendentes: [20, 17, 16],
-                iniciosAscendentes: [3, 5, 2]
+                iniciosDescendentes: [19, 17, 18, 16],
+                iniciosAscendentes: [3, 4, 2, 1],
+                extremos: [0, 20],
             },
             {
                 nombre: 'oblicuacion-izquierda',
@@ -85,8 +89,9 @@
                 modelo: -10,
                 string: "'wdth' 700, 'wght' 110",
                 incremento: 1,
-                iniciosDescendentes: [-20, -17, -16],
-                iniciosAscendentes: [-3, -5, -2]
+                iniciosDescendentes: [-19, -17, -18, -16],
+                iniciosAscendentes: [-3, -4, -2, -1],
+                extremos: [-20, 0]
             }
 
         ]
@@ -251,6 +256,58 @@
         
         var listaErrores = function() {
             errores = jsPsych.data.get().filter( {id: 'respuesta', serieNumero: contadorSeries} ).last(2).select('responseSign').values;
+        }
+
+        var forzarFinSerieAscendente = function() {
+            respuestasPorSerie[contadorSeries] = cadenaRespuestas;
+            console.log(respuestasPorSerie);
+
+            indexUmbralBajo = cadenaRespuestas.findIndex(element => element !== '-');
+            umbralBajo = Math.abs(listaVariaciones.at(indexUmbralBajo)) - (incremento/2);
+            
+            indexUmbralAlto = cadenaRespuestas.findIndex(element => element == '+');
+            umbralAlto = Math.abs(listaVariaciones.at(indexUmbralAlto)) - (incremento/2);
+
+            console.log("Umbral alto: " + umbralAlto + "; Umbral bajo: " + umbralBajo);
+
+            var datosUmbrales = jsPsych.data.get().filter( {id: 'respuesta'} ).last()['trials'][0];
+            datosUmbrales.umbralAlto = umbralAlto;
+            datosUmbrales.umbralBajo = umbralBajo;
+            datosUmbrales.variable = tipoVariacion;
+
+            umbralesPorSerie[contadorSeries] = umbralSerie;
+
+            // Tiene que reiniciarse para olvidar las respuestas de la serie pasada, pero no se guardan en ningún lado todavía
+            cadenaRespuestas = [];
+            contadorEnsayos = 0;
+            listaVariaciones = [];
+            invertirDireccionSerie();
+        }
+
+        var forzarFinSerieDescendente = function() {
+            respuestasPorSerie[contadorSeries] = cadenaRespuestas;
+            console.log(respuestasPorSerie);
+
+            indexUmbralAlto = cadenaRespuestas.findIndex(element => element !== '+');
+            umbralAlto = Math.abs(listaVariaciones.at(indexUmbralAlto)) + (incremento/2);
+            
+            indexUmbralBajo = cadenaRespuestas.findIndex(element => element == '-');
+            umbralBajo = Math.abs(listaVariaciones.at(indexUmbralBajo)) + (incremento/2);
+
+            console.log("Umbral alto: " + umbralAlto + "; Umbral bajo: " + umbralBajo);
+
+            var datosUmbrales = jsPsych.data.get().filter( {id: 'respuesta'} ).last()['trials'][0];
+            datosUmbrales.umbralAlto = umbralAlto;
+            datosUmbrales.umbralBajo = umbralBajo;
+            datosUmbrales.variable = tipoVariacion;
+
+            umbralesPorSerie[contadorSeries] = umbralSerie;
+            
+            // Tiene que reiniciarse para olvidar las respuestas de la serie pasada, pero no se guardan en ningún lado todavía
+            cadenaRespuestas = [];
+            contadorEnsayos = 0;
+            listaVariaciones = [];
+            invertirDireccionSerie();
         }
 
         // PANTALLAS    
@@ -431,12 +488,17 @@
                 switch(direccionSerie){
 
                     case('ascendente'):
-                        if ( respuestaIngresada == ubicacionesEstimulos['modelo'] || respuestaIngresada == 'igual') {
+                        if(info.at(bloqueActual)['extremos'].includes(variacionFuente) == true){
+                            console.log('YESSSSSSSSS');
+                            forzarFinSerieAscendente();
+                            return false;
+                        } else if ( respuestaIngresada == ubicacionesEstimulos['modelo'] || respuestaIngresada == 'igual') {
                             console.log('Se tiene que correr otro ensayo');
+                            console.log(info.at(bloqueActual)['extremos'].includes(variacionFuente));
                             return true;
                         } else if (respuestaIngresada == ubicacionesEstimulos['comparacion']) {
                             listaErrores();
-
+                            
                             console.log(errores);
 
                             // Si doble cambio de signo
@@ -444,13 +506,6 @@
                                 // Guardar las respuestas de la serie
                                 respuestasPorSerie[contadorSeries] = cadenaRespuestas;
                                 console.log(respuestasPorSerie);
-
-                                // // Obtener el valor de la respuesta previa al cambio de signo
-                                // let cambioRespuesta = listaVariaciones.at(-3);
-                                // // Agregarle la mitad del incremento para obtener UMBRAL ALTO
-                                // umbralAlto = Math.abs(cambioRespuesta) + (incremento/2);
-                                // // Obtener valor del umbral bajo:
-                                // umbralComplementario();
 
                                 indexUmbralBajo = cadenaRespuestas.findIndex(element => element !== '-');
                                 umbralBajo = Math.abs(listaVariaciones.at(indexUmbralBajo)) - (incremento/2);
@@ -481,7 +536,11 @@
                         break;
 
                     case('descendente'):
-                        if ( respuestaIngresada == ubicacionesEstimulos['comparacion'] || respuestaIngresada == 'igual') {
+                        if(info.at(bloqueActual)['extremos'].includes(variacionFuente) == true){
+                            console.log('YESSSSSSSSS');
+                            forzarFinSerieDescendente();
+                            return false;
+                        } else if ( respuestaIngresada == ubicacionesEstimulos['comparacion'] || respuestaIngresada == 'igual') {
                             console.log('Se tiene que correr otro ensayo');
                             return true;
                         } else if (respuestaIngresada == ubicacionesEstimulos['modelo']) {
@@ -492,13 +551,6 @@
                             if(errores[0] == '-' && errores[1] == '-' && errores.length >= 2){
                                 respuestasPorSerie[contadorSeries] = cadenaRespuestas;
                                 console.log(respuestasPorSerie);
-
-                                // // Obtener el valor de la respuesta previa al cambio de signo
-                                // let cambioRespuesta = listaVariaciones.at(-3);
-                                // // Agregarle la mitad del incremento para obtener UMBRAL ALTO
-                                // umbralBajo = Math.abs(cambioRespuesta) - (incremento/2);
-                                // // Obtener valor del umbral bajo:
-                                // umbralComplementario();
 
                                 indexUmbralAlto = cadenaRespuestas.findIndex(element => element !== '+');
                                 umbralAlto = Math.abs(listaVariaciones.at(indexUmbralAlto)) + (incremento/2);
