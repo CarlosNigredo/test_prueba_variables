@@ -71,7 +71,7 @@
                 modelo: 780,
                 string: "'wght' 110, 'slnt' 0",
                 incremento: 15,
-                iniciosDescendentes: [825, 855, 885, 915],
+                iniciosDescendentes: [840, 870, 885, 915],
                 iniciosAscendentes: [660, 675, 705, 705],
                 extremos: [645, 930],
             },
@@ -444,7 +444,7 @@
 
         var estimulosPractica = {
             type: jsPsychHtmlKeyboardResponse,
-            stimulus: '<div class="stimulus izquierda inline">M</div><div class="spacerAngle inline" style="width: 2em;"></div><div class="stimulus derecha inline">M</div>',
+            stimulus: '<div class="stimulus izquierda inline">M</div><div class="spacerAngle inline"></div><div class="stimulus derecha inline">M</div>',
             options: 'NO_KEYS',
             trial_duration: 500,
             on_load: function(){
@@ -487,7 +487,7 @@
         var feedback = {
             type: jsPsychHtmlKeyboardResponse,
             stimulus: function() {
-                var feedback_text = '<span style="color:red;font-size:40px;">Error <br/><br/> º_º</span>';
+                var feedback_text = '<span style="color:red;font-size:40px;">Ups, casi <br/><br/> >_< </span>';
                 var last_resp_acc = jsPsych.data.getLastTrialData().values()[0].acierto;
                 if (last_resp_acc == true) {
                     feedback_text = '<span style="color:green;font-size:40px;">Correcto <br/><br/> n_n</span>';
@@ -500,7 +500,7 @@
 
         var estimulos = {
             type: jsPsychHtmlKeyboardResponse,
-            stimulus: '<div class="stimulus izquierda inline">M</div><div class="spacerAngle inline" style="width: 2em;"></div><div class="stimulus derecha inline">M</div>',
+            stimulus: '<div class="stimulus izquierda inline">M</div><div class="spacerAngle inline"></div><div class="stimulus derecha inline">M</div>',
             options: 'NO_KEYS',
             trial_duration: 500,
             data: {
