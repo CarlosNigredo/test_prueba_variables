@@ -66,3 +66,33 @@
   .spacerAngle {
     width: 88px;
   }
+  .pregunta .jspsych-btn {
+    display: inline-block;
+    padding: 26px 40px;
+    margin: 0px 2px;
+    font-size: 30px;
+    font-weight: 400;
+    font-family: "Open Sans", "Arial", sans-serif;
+    cursor: pointer;
+    line-height: 1.4;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    background-image: none;
+    border: 0px solid transparent;
+    border-radius: 4px;
+    color: #1770c1;
+    background-color: #c8e5ff;
+    border-color: #97a4b0;
+  }
+  .pregunta .jspsych-btn:hover {
+    background-color: #53adff;
+    border-color: #53adff;
+    color: white;
+  }
+  .pregunta #jspsych-html-button-response-stimulus {
+    font-size: 24px !important;
+  }
+  .hidebtn #jspsych-html-button-response-btngroup #jspsych-html-button-response-button-1 {
+    display: none !important;
+  }
