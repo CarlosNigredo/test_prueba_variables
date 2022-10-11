@@ -18,91 +18,174 @@
     </head>
     <body></body>
     <script>
+
         const jsPsych = initJsPsych();
         const timeline = [];
 
-        // VARIABLES
-        var bloques = [0, 1, 2, 3];
-        // var bloques = [0];
+        /* ----------------------------------------------------------------------- */
+        /*                                VARIABLES                                */
+        /* ----------------------------------------------------------------------- */
+
+        var staircaseData = [
+            // PUNTO BAJO
+            {
+                peso: {
+                    start: 40,
+                    standard: 75,
+                    step_max: 10,
+                    step_med: 8,
+                    step_min: 6
+                },
+                ancho: {
+                    start: 560,
+                    standard: 660,
+                    step_max: 50,
+                    step_med: 37,
+                    step_min: 25
+                },
+                oblicuacion: {
+                    start: 1,
+                    standard: 5,
+                    step_max: 4,
+                    step_med: 3,
+                    step_min: 2
+                },
+                oblicuacion_izquierda: {
+                    start: -1,
+                    standard: -5,
+                    step_max: -4,
+                    step_med: -3,
+                    step_min: -2
+                }
+            },
+            // PUNTO MEDIO
+            {
+                peso: {
+                    start: 80,
+                    standard: 110,
+                    step_max: 12,
+                    step_med: 10,
+                    step_min: 8
+                },
+                ancho: {
+                    start: 630,
+                    standard: 780,
+                    step_max: 55,
+                    step_med: 42,
+                    step_min: 30
+                },
+                oblicuacion: {
+                    start: 2,
+                    standard: 10,
+                    step_max: 4,
+                    step_med: 3,
+                    step_min: 2
+                },
+                oblicuacion_izquierda: {
+                    start: -2,
+                    standard: -10,
+                    step_max: -4,
+                    step_med: -3,
+                    step_min: -2
+                }
+            },
+            // PUNTO ALTO
+            {
+                peso: {
+                    start: 115,
+                    standard: 160,
+                    step_max: 20,
+                    step_med: 17,
+                    step_min: 14
+                },
+                ancho: {
+                    start: 740,
+                    standard: 880,
+                    step_max: 60,
+                    step_med: 42,
+                    step_min: 35
+                },
+                oblicuacion: {
+                    start: 8,
+                    standard: 15,
+                    step_max: 4,
+                    step_med: 3,
+                    step_min: 2
+                },
+                oblicuacion_izquierda: {
+                    start: -8,
+                    standard: -15,
+                    step_max: -4,
+                    step_med: -3,
+                    step_min: -2
+                }
+            }
+        ]
+
         var bloqueActual;
-        var direccionSerie;
-        var tipoVariacion;
         var estimuloModelo;
         var incremento;
         var atributo;
         var cssConstante;
         var variacionFuente;
-        var errores = [];
-        var umbralSerie;
-        var umbralBajo;
-        var umbralAlto;
-        let signoRespuesta;
+        var signoInicial;
+        var signoInverso;
+        var letraRespuesta;
+        var ultimaRespuesta;
         var contadorEnsayos = 0;
         var contadorSeries = 0;
-        //var erroresConsecutivos = 0;
         var ubicacionesEstimulos = {};
         var respuestaIngresada;
-        var cadenaRespuestas = [];
+        var respuestasStaircase = [];
+        var reversals = [];
         var listaVariaciones = [];
-        var respuestasPorSerie = {};
-        var umbralesPorSerie = {};
-        var iniciosDescendentes;
-        var iniciosAscendentes;
-        var datosCompletos;
         var nuevaPractica = false;
+        var variable;
+        var puntoSerie;
+        var reversalFound;
+        var respuestasParaReversals = [];
 
         const info = [ {
                 nombre: 'peso',
                 pregunta: 'peso',
                 atributocss: 'wght',
-                modelo: 108,
+                index: 0,
                 string: "'wdth' 700, 'slnt' 0",
-                incremento: 4,
-                iniciosDescendentes: [136, 132, 140, 144],
-                iniciosAscendentes: [84, 92, 84, 80],
-                // iniciosDescendentes: [136],
-                // iniciosAscendentes: [84],
                 extremos: [76, 148]
             },
             {
                 nombre: 'ancho',
                 pregunta: 'ancho',
                 atributocss: 'wdth',
-                modelo: 780,
+                index: 1,
                 string: "'wght' 110, 'slnt' 0",
-                incremento: 15,
-                iniciosDescendentes: [840, 870, 885, 915],
-                iniciosAscendentes: [660, 675, 705, 705],
                 extremos: [645, 930],
             },
             {
                 nombre: 'oblicuacion',
                 pregunta: 'inclinación',
                 atributocss: 'slnt',
-                modelo: 10,
+                index: 2,
                 string: "'wdth' 700, 'wght' 110",
-                incremento: 1,
-                iniciosDescendentes: [19, 17, 18, 16],
-                iniciosAscendentes: [3, 4, 2, 1],
                 extremos: [0, 20],
             },
             {
-                nombre: 'oblicuacion-izquierda',
+                nombre: 'oblicuacion_izquierda',
                 pregunta: 'inclinación',
                 atributocss: 'slnt',
-                modelo: -10,
+                index: 3,
                 string: "'wdth' 700, 'wght' 110",
-                incremento: 1,
-                iniciosDescendentes: [-19, -17, -18, -16],
-                iniciosAscendentes: [-3, -4, -2, -1],
                 extremos: [-20, 0]
             }
-
         ]
 
 
         
-        // FUNCIONES
+        /* ----------------------------------------------------------------------- */
+        /*                                FUNCIONES                                */
+        /* ----------------------------------------------------------------------- */
+
+        
         const claseEstimulo = function () {
             var tiposEstimulo = ["modelo", "comparacion"]
             
@@ -111,62 +194,6 @@
             for (let i = 0; i < stimuliContainers.length; i++) {
                 stimuliContainers[i].classList.add(tiposEstimulo.splice( Math.floor(Math.random()*tiposEstimulo.length), 1 )[0]);
             }
-        }
-
-        const variacionEstimulos = function () {
-
-            //seleccionar contenedor con clase .modelo y modificar peso de fuente
-            const modelo = document.querySelector(".modelo");
-            modelo.style.cssText = "font-variation-settings:'" + atributo + "'" + estimuloModelo  + ',' + cssConstante;
-
-            //seleccionar contenedor con clase .comparacion y modificar peso de fuente, de acuerdo con la dirección de la serie
-            const comparacion = document.querySelector(".comparacion");
-
-            switch(contadorEnsayos){
-                case 1:
-                    if (direccionSerie === "ascendente") {
-                        variacionFuente = iniciosAscendentes.splice( Math.floor(Math.random()*iniciosAscendentes.length), 1 )[0];
-                        comparacion.style.cssText = "font-variation-settings:'" + atributo + "'" + variacionFuente + ',' + cssConstante;
-                        console.log('El valor del estímulo de comparación fue: '+variacionFuente);
-                    } else if (direccionSerie === "descendente") {
-                        variacionFuente = iniciosDescendentes.splice( Math.floor(Math.random()*iniciosDescendentes.length), 1 )[0];
-                        comparacion.style.cssText = "font-variation-settings:'" + atributo + "'" + variacionFuente + ',' + cssConstante;
-                    }
-                    break;
-
-                default:
-                    switch(bloqueActual){
-                        case 0:
-                        case 1:
-                        case 2:
-                            if(direccionSerie === "ascendente"){
-                                variacionFuente+=incremento;
-                                comparacion.style.cssText = "font-variation-settings:'" + atributo + "'" + variacionFuente + ',' + cssConstante;
-                                console.log('El valor del estímulo de comparación fue: '+variacionFuente);
-                            } else if (direccionSerie === "descendente") {
-                                console.log('El valor del estímulo de comparación fue: '+variacionFuente);
-                                variacionFuente-=incremento;
-                                comparacion.style.cssText = "font-variation-settings:'" + atributo + "'" + variacionFuente + ',' + cssConstante;
-                                console.log('El valor del estímulo de comparación fue: '+variacionFuente);
-                            }
-                            break;
-                        case 3: 
-                            if (direccionSerie === "ascendente") {
-                                console.log(variacionFuente + ', ' + incremento);
-                                variacionFuente-=incremento;
-                                comparacion.style.cssText = "font-variation-settings:'" + atributo + "'" + variacionFuente + ',' + cssConstante;
-                                console.log('El valor del estímulo de comparación fue: '+variacionFuente);
-                            } else if (direccionSerie === "descendente") {
-                                console.log('El valor del estímulo de comparación fue: '+variacionFuente);
-                                variacionFuente+=incremento;
-                                comparacion.style.cssText = "font-variation-settings:'" + atributo + "'" + variacionFuente + ',' + cssConstante;
-                            }
-                    }
-            }
-
-            
-
-            
         }
 
         const obtenerUbicaciones = function() {
@@ -194,152 +221,92 @@
             }
         }
 
-        // Traduce respuestaIngresada a signo ('+','-','='); lo añade a cadenaRespuestas
-        var respuestas_a_Signos = function() {
+        const evaluarRespuestaStaircase = function() {
+            // Nos dice qué botón clicó el participante
+            switch(jsPsych.data.getLastTrialData().values()[0].response) {
+                case 0:
+                    respuestaIngresada = 'izquierda';
+                    break;
+                case 1:
+                    respuestaIngresada = 'derecha';
+            }
+        }
 
-            //let signoRespuesta;
-
+        const respuestas_a_Letras = function() {
+    
             switch(respuestaIngresada){
                 case(ubicacionesEstimulos['modelo']):
-                    signoRespuesta = '-';
-                    cadenaRespuestas.push(signoRespuesta);
-                    break;
-                
-                case('igual'):
-                    signoRespuesta = '=';
-                    cadenaRespuestas.push(signoRespuesta);
+                    letraRespuesta = 'M';
+                    respuestasStaircase.push(letraRespuesta);
                     break;
 
                 case(ubicacionesEstimulos['comparacion']):
-                    signoRespuesta = '+';
-                    cadenaRespuestas.push(signoRespuesta);
+                    letraRespuesta = 'C';
+                    respuestasStaircase.push(letraRespuesta);
             }
 
         }
 
-        var invertirDireccionSerie = function() {
-            switch(direccionSerie){
-                case('ascendente'):
-                    direccionSerie = 'descendente';
-                    break;
-                case('descendente'):
-                    direccionSerie = 'ascendente';
+        const ajustarVariacion = function() {
+            if ( ultimaRespuesta == signoInicial ) {
+                // si es M tiene que sumar incremento, pero si es C debería restar incremento
+                variacionFuente+=incremento;
+                if ( ultimaRespuesta === respuestasStaircase.at(-2) ) {
+                    respuestasParaReversals.push(ultimaRespuesta);
+                } else if ( ultimaRespuesta !== respuestasStaircase.at(-2) && respuestasStaircase.at(-2) !== undefined ) {
+                    respuestasParaReversals.push(ultimaRespuesta);
+                    checkReversals();
+                }
+                
+            } else if ( ultimaRespuesta == signoInverso ) {
+                if ( ultimaRespuesta !== respuestasStaircase.at(-2) ) {
+                    variacionFuente+=0;
+                } else if ( ultimaRespuesta == respuestasStaircase.at(-2) ) {
+                    variacionFuente-=incremento;
+                    respuestasStaircase.splice(-1, 1, ultimaRespuesta + "'");
+                    respuestasParaReversals.push(ultimaRespuesta);
+                    checkReversals();
+                }
             }
         }
 
-        var umbralComplementario = function() {
-            switch(direccionSerie){
-                case ('ascendente'):
-                    indexUmbralAlto = cadenaRespuestas.length-2;
-                    // Primer respuesta opuesta al inicio de la serie
-                    indexUmbralBajo = cadenaRespuestas.findIndex(element => element !== '-');
-
-                    if (indexUmbralBajo < indexUmbralAlto) {
-                        umbralBajo = Math.abs(listaVariaciones.at(indexUmbralBajo)) - incremento/2;
-                        return
-                    }
-                    umbralBajo = umbralAlto;
-
-                    break;
-
-                case('descendente'):
-                    indexUmbralBajo = cadenaRespuestas.length-2;
-                    // Primer respuesta opuesta al inicio de la serie
-                    indexUmbralAlto = cadenaRespuestas.findIndex(element => element !== '+');
-
-                    if (indexUmbralAlto < indexUmbralBajo) {
-                        umbralAlto = Math.abs(listaVariaciones.at(indexUmbralAlto)) + incremento/2;
-                        return
-                    }
-                    umbralAlto = umbralBajo;
+        const checkReversals = function(){
+            if ( respuestasParaReversals.at(-1) !== respuestasParaReversals.at(-2) && respuestasParaReversals.at(-2) !== undefined ) {
+                reversals.push(respuestasParaReversals.at(-1));
+                reversalFound = true;
             }
         }
-        
-        var listaErrores = function() {
-            errores = jsPsych.data.get().filter( {id: 'respuesta', serieNumero: contadorSeries} ).last(2).select('responseSign').values;
+
+        const cambioStepSize = function() {
+            if (reversals.length <= 3) {
+                incremento = staircaseData.at(puntoSerie)[variable]['step_max'];
+            } else if (reversals.length >= 4 && reversals.length <= 7 ) {
+                incremento = staircaseData.at(puntoSerie)[variable]['step_med'];
+            } else if (reversals.length >= 8 ) {
+                incremento = staircaseData.at(puntoSerie)[variable]['step_min'];
+            }
         }
 
-        var forzarFinSerieAscendente = function() {
-            respuestasPorSerie[contadorSeries] = cadenaRespuestas;
-            console.log(respuestasPorSerie);
-
-            indexUmbralBajo = cadenaRespuestas.findIndex(element => element !== '-');
-            umbralBajo = Math.abs(listaVariaciones.at(indexUmbralBajo)) - (incremento/2);
-            
-            indexUmbralAlto = cadenaRespuestas.findIndex(element => element == '+');
-            umbralAlto = Math.abs(listaVariaciones.at(indexUmbralAlto)) - (incremento/2);
-
-            console.log("Umbral alto: " + umbralAlto + "; Umbral bajo: " + umbralBajo);
-
-            var datosUmbrales = jsPsych.data.get().filter( {id: 'respuesta'} ).last()['trials'][0];
-            datosUmbrales.umbralAlto = umbralAlto;
-            datosUmbrales.umbralBajo = umbralBajo;
-            datosUmbrales.variable = tipoVariacion;
-
-            umbralesPorSerie[contadorSeries] = umbralSerie;
-
-            // Tiene que reiniciarse para olvidar las respuestas de la serie pasada, pero no se guardan en ningún lado todavía
-            cadenaRespuestas = [];
-            contadorEnsayos = 0;
-            listaVariaciones = [];
-            invertirDireccionSerie();
+        const setSignoInverso = function() {
+            if ( signoInicial == 'M' ) {
+                signoInverso = 'C';
+            } else if ( signoInicial == 'C' ) {
+                signoInverso == 'M';
+            }
         }
 
-        var forzarFinSerieDescendente = function() {
-            respuestasPorSerie[contadorSeries] = cadenaRespuestas;
-            console.log(respuestasPorSerie);
-
-            indexUmbralAlto = cadenaRespuestas.findIndex(element => element !== '+');
-            umbralAlto = Math.abs(listaVariaciones.at(indexUmbralAlto)) + (incremento/2);
-            
-            indexUmbralBajo = cadenaRespuestas.findIndex(element => element == '-');
-            umbralBajo = Math.abs(listaVariaciones.at(indexUmbralBajo)) + (incremento/2);
-
-            console.log("Umbral alto: " + umbralAlto + "; Umbral bajo: " + umbralBajo);
-
-            var datosUmbrales = jsPsych.data.get().filter( {id: 'respuesta'} ).last()['trials'][0];
-            datosUmbrales.umbralAlto = umbralAlto;
-            datosUmbrales.umbralBajo = umbralBajo;
-            datosUmbrales.variable = tipoVariacion;
-
-            umbralesPorSerie[contadorSeries] = umbralSerie;
-            
-            // Tiene que reiniciarse para olvidar las respuestas de la serie pasada, pero no se guardan en ningún lado todavía
-            cadenaRespuestas = [];
-            contadorEnsayos = 0;
-            listaVariaciones = [];
-            invertirDireccionSerie();
-        }
-
-        // PANTALLAS    
+        /* -------------------------------------------------------------------------- */
+        /*                                  PANTALLAS                                 */
+        /* -------------------------------------------------------------------------- */
         
         var pantallaInicial = {
-            //Esta es la presentación y aquí se define la dirección de la serie inicial
-            type: jsPsychHtmlKeyboardResponse,
-            stimulus: '<span style="font-size:40px;">Prueba de percepción de variables gráficas</span> <br/><br/> <span>Presiona la tecla <strong>A</strong> o <strong>D</strong> para continuar</span>',
-            choices: ['a', 'd'],
-            on_finish: function(data){
-                // 1 Seleccionar direccion de la primera serie
-
-                var direccionSeleccionada = event.key;
-
-                switch(direccionSeleccionada) {
-                    case('a'):
-                    case('A'):
-                        direccionSerie = "ascendente";
-                        break;
-                    case('d'):
-                    case('D'):
-                        direccionSerie = "descendente";
-                }
-
-                console.log('E ha tecleado esta letra: ' + direccionSeleccionada);
-                console.log('La dirección de la serie será' + direccionSerie);
-
-                // 3 Se asigna ID del participante (Ejemplo: 061320221350)
-                // Tomar fecha y hora y dejar solo cadena de números (o tal vez dejarlo así)
-                //asignaIdParticipante();
-            }
+            type: jsPsychInstructions,
+            pages: [
+            '<span style="font-size:40px;">Prueba de percepción de variables gráficas</span><br><br>'
+            ],
+            show_clickable_nav: true,
+            button_label_previous: 'Regresar',
+            button_label_next: 'Siguiente'
         }
         timeline.push(pantallaInicial);
 
@@ -355,20 +322,6 @@
         }
         timeline.push(pruebaLectura);
 
-        var cuestionario = {
-            type: jsPsychSurveyMultiSelect,
-            questions: [
-                {
-                prompt: "<p style='font-size: 24px; line-height:1.75; text-align: center;'>Si tiene alguno de estos padecimientos, marque la casilla correspondiente;<br> de lo contrario dé clic en Continuar</p><br>", 
-                horizontal: true,
-                options: ["Degeneración macular", "Glaucoma", "Catarata", "Retinopatía diabética"], 
-                name: 'padecimientos'
-                }
-            ],
-            button_label: "Continuar"
-        };
-        timeline.push(cuestionario);
-
         var instrucciones = {
             //Acá se haría la asignación de la dirección de la primera serie, porque en las instrucciones el participante toma control de los aparatos de input, y solo comenzaría su prueba dando clic en algún botón o presienando Enter. Cambiaría el TYPE de instrucciones
             type: jsPsychInstructions,
@@ -380,16 +333,22 @@
                 'Después verás un par de signos durante un lapso muy breve' +
                 '<br><br>' + 
                 '<img src="img/tut-2.png"></img><br>',
-                'Por último contestarás una pregunta, dando clic en una de las tres opciones' +
+                'Por último contestarás una pregunta, dando clic en una de las dos opciones' +
                 '<br><br>' + 
                 '<img src="img/tut-3.png"></img><br>',
                 '<p style="font-size:40px">Estudiamos 3 características gráficas</p>',
                 '<p style="font-size:24px">Peso</p>' +
-                '<p class="inline" style="font-size:200px; font-family:&quot;optotype&quot;; font-variation-settings: &quot;wght&quot; 50, &quot;wdth&quot; 700;">M</p><div class="inline" style="width:40px"></div><p class="inline" style="font-size:200px; font-family:&quot;optotype&quot;; font-variation-settings: &quot;wght&quot; 180, &quot;wdth&quot; 700;">M</p>',
+                '<br>' + 
+                '<img src="img/tut-4.png"></img><br><br>',
                 '<p style="font-size:24px">Ancho</p>' +
-                '<p class="inline" style="font-size:200px; font-family:&quot;optotype&quot;; font-variation-settings: &quot;wght&quot; 110, &quot;wdth&quot; 300;">M</p><div class="inline" style="width:40px"></div><p class="inline" style="font-size:200px; font-family:&quot;optotype&quot;; font-variation-settings: &quot;wght&quot; 110, &quot;wdth&quot; 1000;">M</p>',
-                '<p style="font-size:24px">Inclinación</p>' +
-                '<p class="inline" style="font-size:200px; font-family:&quot;optotype&quot;; font-variation-settings: &quot;wght&quot; 80, &quot;wdth&quot; 700, &quot;slnt&quot; 6;">M</p><div class="inline" style="width:40px"></div><p class="inline" style="font-size:200px; font-family:&quot;optotype&quot;; font-variation-settings: &quot;wght&quot; 80, &quot;wdth&quot; 700, &quot;slnt&quot; 20;">M</p>',
+                '<br>' + 
+                '<img src="img/tut-5.png"></img><br><br>',
+                '<p style="font-size:24px">Inclinación hacia la derecha</p>' +
+                '<br>' + 
+                '<img src="img/tut-6.png"></img><br><br>',
+                '<p style="font-size:24px">Inclinación hacia la izquierda</p>' +
+                '<br>' + 
+                '<img src="img/tut-7.png"></img><br><br>',
                 '<p style="font-size:24px">Hagamos una ronda de práctica, para familiarizarnos con la prueba</p>'
             ],
             button_label_next: "Siguiente",
@@ -397,20 +356,6 @@
             show_clickable_nav: true
         }
         timeline.push(instrucciones);
-
-        // var inicioSerie = {
-        //     type: jsPsychHtmlKeyboardResponse,
-        //     stimulus: '<p style="font-size:40px">Siguiente serie en:</p>',
-        //     data: {
-        //         id: 'SERIE'
-        //     },
-        //     trial_duration: 3000,
-        //     on_finish: function(data) {
-        //         contadorSeries++;
-        //         console.log('Esta es la serie número ' + contadorSeries);
-        //         data.direccionSerie = direccionSerie;
-        //     }
-        // }
 
         var inicioSerie = {
             type: jsPsychSketchpad,
@@ -427,8 +372,6 @@
             countdown_timer_html: '<p style="font-size:40px">Siguiente serie comienza en <br/><br/> <span id="sketchpad-timer" style="color:green;"></span></p>',
             on_finish: function(data) {
                 contadorSeries++;
-                console.log('Esta es la serie número ' + contadorSeries);
-                data.direccionSerie = direccionSerie;
             }
         }
 
@@ -446,7 +389,7 @@
             type: jsPsychHtmlKeyboardResponse,
             stimulus: '<div class="stimulus izquierda inline">M</div><div class="spacerAngle inline"></div><div class="stimulus derecha inline">M</div>',
             options: 'NO_KEYS',
-            trial_duration: 500,
+            trial_duration: 1000,
             on_load: function(){
                 claseEstimulo();
 
@@ -463,9 +406,10 @@
         var respuestasPractica = {
             type: jsPsychHtmlButtonResponse,
             stimulus: function(){
-                return '<p>¿Cuál tenía mayor ' + jsPsych.timelineVariable('variable') + '?</p>';
+                return '<p style="font-size: 24px;">¿Cuál tenía mayor ' + jsPsych.timelineVariable('variable') + '?</p>';
             },
             choices: ['<','=','>'],
+            css_classes: ['pregunta', 'hidebtn'],
             data: {
                 correct_response: function(){
                     return ubicacionesEstimulos['comparacion'];
@@ -475,8 +419,6 @@
             on_finish: function(data){
                 evaluarRespuesta();
                 var acc = false;
-                console.log(data.correct_response);
-                console.log(respuestaIngresada);
                 if (data.correct_response == respuestaIngresada) {
                     acc = true;
                 }
@@ -498,19 +440,50 @@
             trial_duration: 2000
         }
 
-        var estimulos = {
+
+        var estimulosStaircase = {
             type: jsPsychHtmlKeyboardResponse,
             stimulus: '<div class="stimulus izquierda inline">M</div><div class="spacerAngle inline"></div><div class="stimulus derecha inline">M</div>',
             options: 'NO_KEYS',
-            trial_duration: 500,
+            trial_duration: 2000,
             data: {
                 id: 'estimulos' 
             },
             on_load: function(){
                 contadorEnsayos++;
-                console.log("Este es el ensayo: " + contadorEnsayos);
                 claseEstimulo();
-                variacionEstimulos();
+
+                //seleccionar contenedor con clase .modelo y modificar peso de fuente
+                const modelo = document.querySelector(".modelo");
+
+                let atributo = jsPsych.data.get().filter( {id: 'BLOQUE'} ).last()['trials'][0]['atributoCss'];
+                let indexVariable = jsPsych.data.get().filter( {id: 'BLOQUE'} ).last()['trials'][0]['indexVariable'];
+                variable = jsPsych.data.get().filter( {id: 'BLOQUE'} ).last()['trials'][0]['variableBloque'];
+                puntoSerie = jsPsych.data.get().filter( {id: 'SERIE'} ).last()['trials'][0]['puntoFuncionIndex'];
+                let estimuloModelo = staircaseData.at(puntoSerie)[variable]['standard'];
+                let cssConstante = info.at(indexVariable)['string'];
+
+                
+                modelo.style.cssText = "font-variation-settings:'" + atributo + "'" + estimuloModelo  + ',' + cssConstante;
+                
+                //seleccionar contenedor con clase .comparacion y modificar peso de fuente, de acuerdo con la dirección de la serie
+                const comparacion = document.querySelector(".comparacion");
+
+                
+                if ( contadorEnsayos == 1 ) {
+                    variacionFuente = staircaseData.at(puntoSerie)[variable]['start'];
+                    incremento = staircaseData.at(puntoSerie)[variable]['step_max'];
+                    comparacion.style.cssText = "font-variation-settings:'" + atributo + "'" + variacionFuente + ',' + cssConstante;
+                }
+                if ( contadorEnsayos > 1) {
+                    ajustarVariacion();
+                    comparacion.style.cssText = "font-variation-settings:'" + atributo + "'" + variacionFuente + ',' + cssConstante;
+                }
+                if ( reversalFound == true ) {
+                    jsPsych.data.get().filter( {id: 'respuesta'} ).last().values()[0].reversalFound = 'TRUE';
+                }
+                reversalFound = false;
+                    
                 obtenerUbicaciones();
             }
         }
@@ -518,20 +491,29 @@
         var pantallaRespuestas = {
             type: jsPsychHtmlButtonResponse,
             stimulus: function(){
-                return '<p>¿Cuál tenía mayor ' + info.at(bloqueActual)['pregunta'] + '?</p>';
+                let indexVariable = jsPsych.data.get().filter( {id: 'BLOQUE'} ).last()['trials'][0]['indexVariable'];
+                return '<p>¿Cuál tenía mayor ' + info.at(indexVariable)['pregunta'] + '?</p>';
             },
-            choices: ['<','=','>'],
+            choices: ['<','>'],
+            css_classes: ['pregunta'],
             data: {
                 id: 'respuesta',
             },
             on_finish: function(data){
-                evaluarRespuesta();
-                respuestas_a_Signos();
+                evaluarRespuestaStaircase();
+                respuestas_a_Letras();
                 listaVariaciones.push(variacionFuente);
-                console.log(cadenaRespuestas);
-                data.responseSign = signoRespuesta;
+                ultimaRespuesta = respuestasStaircase.at(-1);
+                if ( contadorEnsayos == 1 ) {
+                    signoInicial = respuestasStaircase.at(-1);
+                    setSignoInverso();
+                }
+                cambioStepSize();
+
+                data.responseSign = letraRespuesta;
                 data.valorComparacion = variacionFuente;
                 data.serieNumero = contadorSeries;
+                data.variableBloque = bloqueActual;
             }
         }
 
@@ -573,7 +555,7 @@
                 }
             }
         }
-        timeline.push(loopPractica);
+       timeline.push(loopPractica);
 
         var finPractica = {
             type: jsPsychHtmlButtonResponse,
@@ -581,198 +563,100 @@
             choices: ['Comenzar']
         }
         timeline.push(finPractica);
-        
-        // REPITE ENSAYO HASTA QUE SE DEBA INICIAR OTRA SERIE
-        var ensayo = {
-            timeline: [cruzFijacion, estimulos, pantallaRespuestas],
-            loop_function: function(data) {
+
+        var ensayoStaircase = {
+            timeline: [cruzFijacion, estimulosStaircase, pantallaRespuestas],
+            loop_function: function(data){
+                if (reversals.length < 12) { 
+                    return true 
+                } else if (reversals.length == 12) { 
+                    // Calcular PSE y JND
+                    // PSE es el promedio de los últimos 8 reversals (los primeros 4 se descartan)
+                    let datosEscalera = jsPsych.data.get().filter( {id: 'respuesta'} ).last()['trials'][0];
+                    let puntoActual = jsPsych.data.get().filter( {id: 'SERIE'} ).last()['trials'][0].puntoFuncionIndex;
+
+                    let pse = jsPsych.data.get().filter( {id: 'respuesta', variableBloque: bloqueActual, puntoFuncionIndex: puntoActual, reversalFound: 'TRUE'} ).last(8).select('valorComparacion').mean();
+
+                    let valoresReversals =  jsPsych.data.get().filter( {id: 'respuesta', variableBloque: bloqueActual, puntoFuncionIndex: puntoActual, reversalFound: 'TRUE'} ).last(8).select('valorComparacion')['values'];
+
+                    datosEscalera.igualdadSubjetiva = pse;
                 
-                switch(direccionSerie){
+                    // JND
+                    let suma = 0;
+                    
+                    for(i=0;i<valoresReversals.length;i++){
+                        let x = Math.pow( (valoresReversals[i] - pse), 2 );
+                        suma+=x;
+                    }
 
-                    case('ascendente'):
-                        if(info.at(bloqueActual)['extremos'].includes(variacionFuente) == true){
-                            console.log('YESSSSSSSSS');
-                            forzarFinSerieAscendente();
-                            return false;
-                        } else if ( respuestaIngresada == ubicacionesEstimulos['modelo'] || respuestaIngresada == 'igual') {
-                            console.log('Se tiene que correr otro ensayo');
-                            console.log(info.at(bloqueActual)['extremos'].includes(variacionFuente));
-                            return true;
-                        } else if (respuestaIngresada == ubicacionesEstimulos['comparacion']) {
-                            listaErrores();
-                            
-                            console.log(errores);
+                    let jnd = Math.sqrt( (suma/valoresReversals.length) );
+                    datosEscalera.umbralDiferencial = jnd;
 
-                            // Si doble cambio de signo
-                            if(errores[0] == '+' && errores[1] == '+' && errores.length >= 2){
-                                // Guardar las respuestas de la serie
-                                respuestasPorSerie[contadorSeries] = cadenaRespuestas;
-                                console.log(respuestasPorSerie);
+                    respuestasStaircase = [];
+                    contadorEnsayos = 0;
+                    listaVariaciones = [];
+                    variacionFuente = 0;
+                    reversals = [];
+                    respuestasParaReversals = [];
 
-                                indexUmbralBajo = cadenaRespuestas.findIndex(element => element !== '-');
-                                umbralBajo = Math.abs(listaVariaciones.at(indexUmbralBajo)) - (incremento/2);
-                                
-                                indexUmbralAlto = cadenaRespuestas.findIndex(element => element == '+');
-                                umbralAlto = Math.abs(listaVariaciones.at(indexUmbralAlto)) - (incremento/2);
-
-                                console.log("Umbral alto: " + umbralAlto + "; Umbral bajo: " + umbralBajo);
-
-                                var datosUmbrales = jsPsych.data.get().filter( {id: 'respuesta'} ).last()['trials'][0];
-                                datosUmbrales.umbralAlto = umbralAlto;
-                                datosUmbrales.umbralBajo = umbralBajo;
-                                datosUmbrales.variable = tipoVariacion;
-
-                                umbralesPorSerie[contadorSeries] = umbralSerie;
-
-                                // Tiene que reiniciarse para olvidar las respuestas de la serie pasada, pero no se guardan en ningún lado todavía
-                                cadenaRespuestas = [];
-                                contadorEnsayos = 0;
-                                listaVariaciones = [];
-                                invertirDireccionSerie();
-
-                                return false;
-                            } else {
-                                return true;
-                            }    
-                        }
-                        break;
-
-                    case('descendente'):
-                        if(info.at(bloqueActual)['extremos'].includes(variacionFuente) == true){
-                            console.log('YESSSSSSSSS');
-                            forzarFinSerieDescendente();
-                            return false;
-                        } else if ( respuestaIngresada == ubicacionesEstimulos['comparacion'] || respuestaIngresada == 'igual') {
-                            console.log('Se tiene que correr otro ensayo');
-                            return true;
-                        } else if (respuestaIngresada == ubicacionesEstimulos['modelo']) {
-                            listaErrores();
-
-                            console.log(errores);
-
-                            if(errores[0] == '-' && errores[1] == '-' && errores.length >= 2){
-                                respuestasPorSerie[contadorSeries] = cadenaRespuestas;
-                                console.log(respuestasPorSerie);
-
-                                indexUmbralAlto = cadenaRespuestas.findIndex(element => element !== '+');
-                                umbralAlto = Math.abs(listaVariaciones.at(indexUmbralAlto)) + (incremento/2);
-                                
-                                indexUmbralBajo = cadenaRespuestas.findIndex(element => element == '-');
-                                umbralBajo = Math.abs(listaVariaciones.at(indexUmbralBajo)) + (incremento/2);
-
-                                console.log("Umbral alto: " + umbralAlto + "; Umbral bajo: " + umbralBajo);
-
-                                var datosUmbrales = jsPsych.data.get().filter( {id: 'respuesta'} ).last()['trials'][0];
-                                datosUmbrales.umbralAlto = umbralAlto;
-                                datosUmbrales.umbralBajo = umbralBajo;
-                                datosUmbrales.variable = tipoVariacion;
-
-                                umbralesPorSerie[contadorSeries] = umbralSerie;
-                                
-                                // Tiene que reiniciarse para olvidar las respuestas de la serie pasada, pero no se guardan en ningún lado todavía
-                                cadenaRespuestas = [];
-                                contadorEnsayos = 0;
-                                listaVariaciones = [];
-                                invertirDireccionSerie();
-
-                                return false;
-                            } else {
-                                return true;
-                            }
-                        }
+                    return false 
                 }
             },
-            on_finish: function(){
-                
-            },
             on_load: function(){
-                console.log("INICIA ENSAYO")
-            }
+                
+            }        
         }
 
-        //REPITE SERIES HASTA QUE TERMINE EL EXPERIMENTO
-        var serie = {
-            timeline: [inicioSerie, ensayo],
-
-            loop_function: function(data){
-
-                var seriesRestantes = iniciosAscendentes.length + iniciosDescendentes.length;
-
-                if (iniciosAscendentes.length == 0 && iniciosDescendentes == 0){
-                    console.log('YA SE ACABÓ LA TORTURA!!!');
-                    
-                    let datosCompletos = jsPsych.data.get().filter( {id: 'respuesta'} ).last()['trials'][0];
-
-                    let umbralAltoPromedio = jsPsych.data.get().filter( {id: 'respuesta', variable: tipoVariacion} ).select('umbralAlto').mean();
-
-                    let umbralBajoPromedio = jsPsych.data.get().filter( {id: 'respuesta', variable: tipoVariacion} ).select('umbralBajo').mean();
-
-                    let pse = (umbralAltoPromedio + umbralBajoPromedio) / 2;
-
-                    console.log (umbralAltoPromedio + ", " + umbralBajoPromedio);
-
-                    datosCompletos.umbralAltoPromedio = umbralAltoPromedio;
-                    datosCompletos.umbralBajoPromedio = umbralBajoPromedio;
-                    datosCompletos.intervaloIncertidumbre = umbralAltoPromedio - umbralBajoPromedio ;
-                    datosCompletos.umbralDiferencial = (umbralAltoPromedio - umbralBajoPromedio) / 2;
-                    datosCompletos.puntoIgualdadSubjetiva = pse;
-                    datosCompletos.errorConstante = pse - Math.abs(info.at(bloqueActual)['modelo']);
-                    datosCompletos.datosCompletos = respuestasPorSerie;
-                    //console.log(datosCompletos);
-
-                    return false;
+        var escalera = {
+            timeline: [inicioSerie, ensayoStaircase],
+            timeline_variables: [
+                {
+                    id: 'alto',
+                    index: 2
+                },
+                {
+                    id: 'medio',
+                    index: 1
+                },
+                {
+                    id: 'bajo',
+                    index: 0
                 }
-                else {
-                    console.log('Aun restan ' + seriesRestantes + ' series');
-                    
-                    
-                    return true;
-                }
-
+            ],
+            randomize_order: true,
+            data: {
+                puntoFuncion: jsPsych.timelineVariable('id'),
+                puntoFuncionIndex: jsPsych.timelineVariable('index')
             },
-            on_load: function(){
-                console.log("INICIA SERIE")
+            on_load: function(data) {
             }
         }
 
         var inicioBloque = {
             type: jsPsychHtmlButtonResponse,
             stimulus: '<span style="font-size:40px;">Da clic para comenzar el bloque</span> <br/><br/>',
-            choices: ['Continuar >'],
-            css_classes: ['bloque']
+            choices: ['Continuar >']
         }
 
         var bloque = {
-            timeline: [inicioBloque, serie],
-            loop_function: function(data){
-                if(bloques.length>0){
-                    return true;
-                }
-                else {
-                    return false;
-                }
+            timeline: [inicioBloque, escalera],
+            timeline_variables: info,
+            randomize_order: true,
+            data: {
+                id: "BLOQUE",
             },
-            on_load: function(){
-                //seleccionar un elemento de BLOQUES y eliminarlo
-                bloqueActual = bloques.splice( Math.floor(Math.random()*bloques.length), 1 )[0];
-                console.log("INICIA BLOQUE. La variable de este bloque es: " + info.at(bloqueActual)['nombre']);
-
-                //asignar valores a las variables globales de acuerdo con INFO
-                tipoVariacion = info.at(bloqueActual)['nombre'];
-                incremento = info.at(bloqueActual)['incremento'];
-                iniciosDescendentes = info.at(bloqueActual)['iniciosDescendentes'];
-                iniciosAscendentes = info.at(bloqueActual)['iniciosAscendentes'];
-                atributo = info.at(bloqueActual)['atributocss'];
-                estimuloModelo = info.at(bloqueActual)['modelo'];
-                cssConstante = info.at(bloqueActual)['string'];
-                datosCompletos = {};
-
+            on_load: function(data) {
+                bloqueActual = jsPsych.timelineVariable('nombre');
+            },
+            on_finish: function(data) {
+                data.variableBloque = jsPsych.timelineVariable('nombre');
+                data.indexVariable = jsPsych.timelineVariable('index');
+                data.atributoCss = jsPsych.timelineVariable('atributocss');
             }
         }
         timeline.push(bloque);
 
         var agradecimiento = {
-            //A este trial se le añadiría el objeto con las respuestas por serie
             type: jsPsychHtmlKeyboardResponse,
             stimulus: '<span style="font-size:40px;">GRACIAS POR SU PARTICIPACIÓN</span>',
             choices: 'NO_KEYS',
