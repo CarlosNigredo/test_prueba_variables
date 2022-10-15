@@ -9,7 +9,8 @@
         <script src="jspsych/dist/plugin-html-keyboard-response.js"></script>
         <script src="jspsych/dist/plugin-instructions.js"></script>
         <script src="jspsych/dist/plugin-html-button-response.js"></script>
-        <script src="jspsych/dist/plugin-survey-multi-select.js"></script>
+        <script src="jspsych/dist/plugin-survey-multi-choice.js"></script>
+        <script src="jspsych/dist/plugin-survey-text.js"></script>
         <script src="jspsych/dist/plugin-sketchpad.js"></script>
         <script src="js/data_practica.js"></script>
 
@@ -95,8 +96,8 @@
                     start: 115,
                     standard: 160,
                     step_max: 20,
-                    step_med: 17,
-                    step_min: 14
+                    step_med: 15,
+                    step_min: 10
                 },
                 ancho: {
                     start: 740,
@@ -309,7 +310,67 @@
             button_label_next: 'Siguiente'
         }
         timeline.push(pantallaInicial);
+        
+        var edad = {
+            type: jsPsychSurveyText,
+            questions: [
+                {prompt: 'Ingresa tu edad', name: 'edad', required: true}
+            ],
+            button_label: 'Siguiente',
+            on_load: function(data){
+                numPad = document.getElementById('jspsych-survey-text-0');
+                htmlString = '<div class="numpad-wrapper"><div class="numpad"><div class="numpad--buttons nums">1</div><div class="numpad--buttons nums">2</div><div class="numpad--buttons nums">3</div><div class="numpad--buttons nums">4</div><div class="numpad--buttons nums">5</div><div class="numpad--buttons nums">6</div><div class="numpad--buttons nums">7</div><div class="numpad--buttons nums">8</div><div class="numpad--buttons nums">9</div><div class="numpad--buttons notnums del">Borrar</div><div class="numpad--buttons nums">0</div><div class="numpad--buttons notnums ok">OK</div></div></div>'
+                numPad.insertAdjacentHTML('beforeend', htmlString);
 
+                const numpad = document.querySelector(".numpad-wrapper");
+                const numpadClasses = numpad.classList;
+                const inputNum = document.querySelector("#input-0");
+                var currentTxt = inputNum.textContent;
+
+                inputNum.addEventListener('click', () => {
+                    const toggle = numpadClasses.toggle("show", true);
+                })
+
+                const numpadNumBtns = document.querySelectorAll('.nums');
+
+                numpadNumBtns.forEach(x => {
+                    x.addEventListener('click', function handleClick(event) {
+                        let clickedNum = this.textContent;
+                        currentTxt = currentTxt.concat(clickedNum);
+                        console.log (currentTxt);
+                        inputNum.value = currentTxt;
+                    });
+                });
+
+                const deleteNum = document.querySelector(".del");
+
+                deleteNum.addEventListener('click', () => {
+                    currentTxt = currentTxt.slice(0, -1);
+                    inputNum.value = currentTxt;
+                })
+
+                const cerrar = document.querySelector(".ok");
+
+                cerrar.addEventListener('click', () => {
+                    const toggle = numpadClasses.toggle("show", false);
+                })
+            }
+        }
+        timeline.push(edad);
+
+        var tipo = {
+            type: jsPsychSurveyMultiChoice,
+            questions: [
+                {
+                prompt: "¿A qué sector de la comunidad UAM perteneces?", 
+                name: 'ocupacion', 
+                options: ['Alumnado', 'Docentes', 'Personal administrativo']
+                }
+            ],
+            button_label: 'Siguiente',
+        }
+        timeline.push(tipo);
+        
         var pruebaLectura = {
             type: jsPsychInstructions,
             pages: [
@@ -505,8 +566,9 @@
                 listaVariaciones.push(variacionFuente);
                 ultimaRespuesta = respuestasStaircase.at(-1);
                 if ( contadorEnsayos == 1 ) {
-                    signoInicial = respuestasStaircase.at(-1);
+                    signoInicial = 'M';
                     setSignoInverso();
+                    respuestasStaircase[0] = 'M'
                 }
                 cambioStepSize();
 
