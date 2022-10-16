@@ -97,6 +97,14 @@
     display: none !important;
   }
 
+  .escape-btn {
+    width: 100%;
+    height: 75px;
+    position: absolute;
+    top: 0;
+    cursor: pointer;
+  }
+
   /* ESTILOS NUMPAD */
 
   .numpad-wrapper{

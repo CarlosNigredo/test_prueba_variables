@@ -145,6 +145,7 @@
         var puntoSerie;
         var reversalFound;
         var respuestasParaReversals = [];
+        var forzarFin = false;
 
         const info = [ {
                 nombre: 'peso',
@@ -358,6 +359,19 @@
         }
         timeline.push(edad);
 
+        var estudios = {
+            type: jsPsychSurveyMultiChoice,
+            questions: [
+                {
+                prompt: "Último nivel de estudios (completado o en curso)", 
+                name: 'escolaridad', 
+                options: ['Licenciatura', 'Maestría', 'Doctorado']
+                }
+            ],
+            button_label: 'Siguiente',
+        }
+        timeline.push(estudios);
+        
         var tipo = {
             type: jsPsychSurveyMultiChoice,
             questions: [
@@ -444,6 +458,18 @@
             data: {
                 id: 'fijacion' 
             },
+            on_load: function(data) {
+                const page = document.querySelector(".jspsych-content-wrapper");
+                var escapePresent = false;
+                if (page.querySelector('.escape-btn') !== null) {
+                    escapePresent = true;
+                }
+                if (escapePresent == true) {
+                    let child = page.querySelector('.escape-btn');
+                    page.removeChild(child);
+                    escapePresent = false;
+                } 
+            }
         }
 
         var estimulosPractica = {
@@ -560,6 +586,18 @@
             data: {
                 id: 'respuesta',
             },
+            on_load: function(data) {
+                const page = document.querySelector(".jspsych-content-wrapper");
+                htmlString = '<div class="escape-btn"></div>';
+                page.insertAdjacentHTML('beforeend', htmlString);
+                
+                const escapeBtn = document.querySelector(".escape-btn");
+                escapeBtn.addEventListener('click', () => {
+                    forzarFin = true;
+                    console.log('boton puchado');
+                    console.log('forzarFin es igual a: ' + forzarFin);
+                })
+            },
             on_finish: function(data){
                 evaluarRespuestaStaircase();
                 respuestas_a_Letras();
@@ -629,9 +667,23 @@
         var ensayoStaircase = {
             timeline: [cruzFijacion, estimulosStaircase, pantallaRespuestas],
             loop_function: function(data){
+                if (forzarFin == true) {
+                    respuestasStaircase = [];
+                    console.log('Debería saltar al siguiente bloque...')
+                    contadorEnsayos = 0;
+                    listaVariaciones = [];
+                    variacionFuente = 0;
+                    reversals = [];
+                    respuestasParaReversals = [];
+                    forzarFin = false;
+
+                    return false;
+                }
                 if (reversals.length < 12) { 
                     return true 
-                } else if (reversals.length == 12) { 
+                } 
+                
+                if (reversals.length == 12) { 
                     // Calcular PSE y JND
                     // PSE es el promedio de los últimos 8 reversals (los primeros 4 se descartan)
                     let datosEscalera = jsPsych.data.get().filter( {id: 'respuesta'} ).last()['trials'][0];
