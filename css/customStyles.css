@@ -64,12 +64,12 @@
       display: inline-block;
   }
   .spacerAngle {
-    width: 88px;
+    width: 110px;
   }
   .pregunta .jspsych-btn {
     display: inline-block;
     padding: 26px 40px;
-    margin: 0px 2px;
+    margin: 0px;
     font-size: 30px;
     font-weight: 400;
     font-family: "Open Sans", "Arial", sans-serif;
@@ -85,16 +85,20 @@
     background-color: #c8e5ff;
     border-color: #97a4b0;
   }
+  .pregunta #jspsych-html-button-response-stimulus {
+      margin-bottom: 60px;
+      font-size: 24px !important;
+  }
   .pregunta .jspsych-btn:hover {
     background-color: #53adff;
     border-color: #53adff;
     color: white;
   }
-  .pregunta #jspsych-html-button-response-stimulus {
-    font-size: 24px !important;
-  }
   .hidebtn #jspsych-html-button-response-btngroup #jspsych-html-button-response-button-1 {
     display: none !important;
+  }
+  .pregunta .jspsych-html-button-response-button {
+    margin: 0px 15px !important; 
   }
 
   .escape-btn {
